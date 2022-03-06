@@ -1,0 +1,11 @@
+{
+  "realm": "RM",
+  "auth-server-url": "http://localhost:6060/auth/",
+  "ssl-required": "external",
+  "resource": "gkg-api-gateway",
+  "verify-token-audience": true,
+  "credentials": {
+    "secret": "e15f0191-30ec-4a74-8bf8-10c059cb13aa"
+  },
+  "confidential-port": 0
+}

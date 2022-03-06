@@ -1,0 +1,76 @@
+server:
+  port: 8099
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+gkg:
+  routing-url:
+    gkg-rm-core: http://localhost:9092/
+  authorization:
+    url: http://localhost:6060/auth/realms/RM/protocol/openid-connect/token
+
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: ${gkg.keycloak.url:http://localhost:6060/auth}
+            user-name-attribute: preferred_username
+        registration:
+          keycloak:
+            client-id: ${gkg.keycloak.client-id:gkg-rm-core}
+            client-secret: ${gkg.keycloak.client-secret:gkg-rm-core}
+      resourceserver:
+        jwt:
+          issuer-uri: ${gkg.keycloak.url:http://localhost:6060/auth}
+
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 300000 #5 minutes in ms
+        response-timeout: 300000
+        pool.type: ELASTIC # ELASTIC (default), FIXED, DISABLED
+      discovery:
+        locator:
+          enabled: true
+#      default-filters:
+#        - RemoveRequestHeader=Cookie
+#        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+      routes:
+#        - id: keycloak
+#          uri: https://tristtams1.tav.aero:6063
+#          predicates:
+#            - Path= /auth/realms/rm/**
+
+        - id: gkg-rm-core
+          uri: ${gkg.routing-url.gkg-rm-core}
+          predicates:
+          - Path=/gkg-rm-core/**
+
+## The Reactor Netty HttpClient and HttpServer can have wiretap enabled.
+## When combined with setting the reactor.netty log level to DEBUG or TRACE,
+## it enables the logging of information, such as headers and bodies sent and received across the wire.
+spring.cloud.gateway.httpserver.wiretap: false
+spring.cloud.gateway.httpclient.wiretap: false
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: default
+
+gkg:
+  routing-url:
+    rm-core: lb://gkg-rm-core
+
+  keycloak:
+    url: http://localhost:6060/auth/realms/RM
+    client-id: ${KEYCLOAK-CLIENT-ID:gkg-rm-core}
+    client-secret: ${KEYCLOAK-CLIENT-SECRET:e15f0191-30ec-4a74-8bf8-10c059cb13aa}
